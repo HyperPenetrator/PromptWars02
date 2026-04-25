@@ -166,7 +166,7 @@ function App() {
         <div className="header-content">
           <div className="logo-section">
             <CheckCircle2 className="logo-icon" size={28} aria-hidden="true" />
-            <h1 className="gradient-title">Assam Election Assistant</h1>
+            <h1 className="gradient-title">Election Process Assistant</h1>
           </div>
           <div className="header-actions">
             <button 
