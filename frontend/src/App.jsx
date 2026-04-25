@@ -1,13 +1,25 @@
 import { useState, useEffect, useRef } from 'react'
 import { Send, AlertCircle, CheckCircle2, MapPin } from 'lucide-react'
+import { auth } from './firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import ChatMessage from './components/ChatMessage'
 import AddressModal from './components/AddressModal'
 import Header from './components/Header'
 import ChatInput from './components/ChatInput'
 import WelcomeCard from './components/WelcomeCard'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 function App() {
+  const [user, setUser] = useState(null)
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+    })
+    return () => unsubscribe()
+  }, [])
+
   // State initialization with LocalStorage persistence
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('election_chat_history')
@@ -19,6 +31,23 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [addressInput, setAddressInput] = useState('')
   const [isSearchingAddress, setIsSearchingAddress] = useState(false)
+  
+  const [voterData, setVoterData] = useState(() => {
+    const saved = localStorage.getItem('voter_data_global')
+    return saved ? JSON.parse(saved) : {
+      steps: [
+        { id: 1, title: 'Register to Vote', completed: true, description: 'Ensure your name is in the electoral roll.' },
+        { id: 2, title: 'Find Polling Booth', completed: false, description: 'Locate your assigned voting station.' },
+        { id: 3, title: 'Verify Identity', completed: false, description: 'Check if you have a valid EPIC card.' },
+        { id: 4, title: 'Cast Your Vote', completed: false, description: 'Visit your booth on election day.' }
+      ],
+      savedBooth: null
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('voter_data_global', JSON.stringify(voterData))
+  }, [voterData])
   
   const messagesEndRef = useRef(null)
 
@@ -122,6 +151,16 @@ function App() {
           message += `**Address:** ${fullAddr} ${polls.address.zip}\n`
           message += `**Hours:** ${polls.pollingHours || 'Not listed'}\n`
           
+          // Auto-update Dashboard
+          setVoterData(prev => ({
+            ...prev,
+            savedBooth: {
+              name: polls.address.locationName,
+              address: fullAddr
+            },
+            steps: prev.steps.map(s => s.id === 2 ? { ...s, completed: true } : s)
+          }))
+
           // If we have specific poll address, try to geocode that instead (more precise)
           try {
             const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddr)}&limit=1`)
@@ -180,10 +219,19 @@ function App() {
           aria-label="Conversation history with the Election Assistant"
         >
           {messages.length === 0 ? (
-            <WelcomeCard 
-              setInput={setInput} 
-              handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} 
-            />
+            user ? (
+              <Dashboard 
+                user={user} 
+                voterData={voterData}
+                setInput={setInput} 
+                handleSend={handleSend} 
+              />
+            ) : (
+              <WelcomeCard 
+                setInput={setInput} 
+                handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} 
+              />
+            )
           ) : (
             messages.map((msg, idx) => (
               <ChatMessage key={msg.id || idx} msg={msg} />
