@@ -1,7 +1,18 @@
-import { CheckCircle2, MapPin, AlertCircle } from 'lucide-react'
+import { CheckCircle2, MapPin, AlertCircle, LogIn, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { auth, loginWithGoogle, logout } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 export default function Header({ health, setIsModalOpen, clearHistory }) {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+    })
+    return () => unsubscribe()
+  }, [])
+
   return (
     <header className="glass-header" role="banner">
       <div className="header-content">
@@ -11,13 +22,28 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
         </div>
 
         <div className="header-actions">
+          {user ? (
+            <div className="user-profile">
+              <img src={user.photoURL} alt={user.displayName} className="user-avatar" />
+              <span className="user-name">{user.displayName.split(' ')[0]}</span>
+              <button onClick={logout} className="btn-icon-only u-focus-ring" aria-label="Sign Out" title="Sign Out">
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={loginWithGoogle} className="btn-civic u-focus-ring" aria-label="Sign In">
+              <LogIn size={18} />
+              <span>Sign In</span>
+            </button>
+          )}
+
           <button 
             id="poll-finder-trigger"
             className="btn-civic u-focus-ring" 
             onClick={() => setIsModalOpen(true)}
             aria-label="Find your polling station on the map"
           >
-            <MapPin size={20} />
+            <MapPin size={18} />
             <span>Poll Finder</span>
           </button>
           
@@ -25,10 +51,10 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
             id="clear-history-btn"
             className="btn-icon-only u-flex-center u-focus-ring" 
             onClick={clearHistory} 
-            aria-label="Clear chat history and reset education session"
+            aria-label="Clear chat history"
             title="Clear History"
           >
-            <AlertCircle size={20} />
+            <AlertCircle size={18} />
           </button>
 
           <div 
