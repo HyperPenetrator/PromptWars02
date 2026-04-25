@@ -1,5 +1,21 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Mock Firebase
+vi.mock('./firebase', () => ({
+  auth: { onAuthStateChanged: vi.fn() },
+  loginWithGoogle: vi.fn(),
+  logout: vi.fn(),
+}))
+
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(() => vi.fn()),
+  GoogleAuthProvider: vi.fn(),
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
+}))
+
 import WelcomeCard from './components/WelcomeCard'
 import Header from './components/Header'
 
