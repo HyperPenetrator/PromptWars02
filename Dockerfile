@@ -1,9 +1,7 @@
 # Stage 1: Build the React frontend
 FROM node:20-slim AS frontend-builder
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
+
 ARG VITE_FIREBASE_API_KEY
 ARG VITE_FIREBASE_AUTH_DOMAIN
 ARG VITE_FIREBASE_PROJECT_ID
@@ -18,6 +16,9 @@ ENV VITE_FIREBASE_STORAGE_BUCKET=$VITE_FIREBASE_STORAGE_BUCKET
 ENV VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID
 ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
 # Build frontend (VITE_API_URL left blank so it uses relative paths in production)
 RUN npm run build
 
