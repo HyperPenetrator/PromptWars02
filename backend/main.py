@@ -56,13 +56,27 @@ async def log_requests(request: Request, call_next):
     logger.info(f"Method: {request.method} Path: {request.url.path} Duration: {duration:.2f}s Status: {response.status_code}")
     return response
 
-# Root redirect or welcome message
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Election Assistant API. Use /api/v1/health to check status."}
+
 
 # Include versioned router
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount static files
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
+if os.path.isdir(frontend_dist):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    @app.get("/{catchall:path}")
+    async def serve_frontend(catchall: str):
+        # Serve icons.svg or other files from root of dist if they exist
+        file_path = os.path.join(frontend_dist, catchall)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
 
 if __name__ == "__main__":
     import uvicorn
