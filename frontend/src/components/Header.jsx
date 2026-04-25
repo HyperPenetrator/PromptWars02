@@ -7,6 +7,7 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
     })

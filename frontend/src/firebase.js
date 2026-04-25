@@ -13,9 +13,32 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const provider = new GoogleAuthProvider();
+let auth = null;
+let provider = null;
 
-export const loginWithGoogle = () => signInWithPopup(auth, provider);
-export const logout = () => signOut(auth);
+if (firebaseConfig.apiKey) {
+  try {
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    provider = new GoogleAuthProvider();
+  } catch (error) {
+    console.error("Firebase initialization failed:", error);
+  }
+} else {
+  console.warn("Firebase API Key missing. Authentication features will be disabled.");
+}
+
+export { auth, provider };
+
+export const loginWithGoogle = () => {
+  if (!auth) {
+    alert("Authentication is not configured. Please add Firebase API keys to your .env file.");
+    return Promise.reject("Auth not configured");
+  }
+  return signInWithPopup(auth, provider);
+};
+
+export const logout = () => {
+  if (!auth) return Promise.resolve();
+  return signOut(auth);
+};
