@@ -1,6 +1,18 @@
-import { CheckCircle2, MapPin, AlertCircle } from 'lucide-react'
+import { CheckCircle2, MapPin, AlertCircle, LogIn, LogOut } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { auth, loginWithGoogle, logout } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 
 export default function Header({ health, setIsModalOpen, clearHistory }) {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+    })
+    return () => unsubscribe()
+  }, [])
+
   return (
     <header className="glass-header" role="banner">
       <div className="header-content">
@@ -9,6 +21,19 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
           <h1 className="gradient-title">Election Process Assistant</h1>
         </div>
         <div className="header-actions">
+          {user ? (
+            <div className="user-profile">
+              <span className="user-name">{user.displayName}</span>
+              <button onClick={logout} className="btn-icon-only u-focus-ring" aria-label="Sign Out" title="Sign Out">
+                <LogOut size={20} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={loginWithGoogle} className="btn-civic u-focus-ring" aria-label="Sign In with Google">
+              <LogIn size={20} />
+              <span>Sign In</span>
+            </button>
+          )}
           <button 
             id="poll-finder-trigger"
             className="btn-civic u-focus-ring" 

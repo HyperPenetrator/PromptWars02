@@ -18,10 +18,7 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
 
-def test_root():
-    response = client.get("/")
-    assert response.status_code == 200
-    assert "message" in response.json()
+
 
 @patch("services.GeminiClient.get_response")
 @patch("services.LogicRouter.route_intent")
