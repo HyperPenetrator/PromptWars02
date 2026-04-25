@@ -37,6 +37,16 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
             </button>
           )}
 
+          {user && (
+            <button 
+              className="btn-secondary u-focus-ring"
+              onClick={() => document.getElementById('dashboard-section')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', border: 'none', background: 'rgba(255,255,255,0.05)', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '8px' }}
+            >
+              Dashboard
+            </button>
+          )}
+
           <button 
             id="poll-finder-trigger"
             className="btn-civic u-focus-ring" 

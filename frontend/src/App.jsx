@@ -260,14 +260,7 @@ function App() {
           aria-label="Conversation history with the Election Assistant"
         >
           {messages.length === 0 ? (
-            user ? (
-              <Dashboard 
-                user={user} 
-                voterData={voterData}
-                setInput={setInput} 
-                handleSend={handleSend} 
-              />
-            ) : (
+            !user && (
               <WelcomeCard 
                 setInput={setInput} 
                 handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} 
@@ -277,6 +270,17 @@ function App() {
             messages.map((msg, idx) => (
               <ChatMessage key={msg.id || idx} msg={msg} />
             ))
+          )}
+          
+          {user && (
+            <div id="dashboard-section" className="persistent-dashboard">
+              <Dashboard 
+                user={user} 
+                voterData={voterData}
+                setInput={setInput} 
+                handleSend={handleSend} 
+              />
+            </div>
           )}
           {isLoading && (
             <div aria-busy="true" aria-label="Assistant is typing">
