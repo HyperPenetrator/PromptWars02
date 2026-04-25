@@ -1,9 +1,10 @@
-import { MapPin, X } from 'lucide-react'
+import { MapPin, X, Beaker } from 'lucide-react'
 
 const AddressModal = ({ 
   isOpen, 
   onClose, 
   onSubmit, 
+  onDemo,
   addressInput, 
   setAddressInput, 
   isSearching 
@@ -71,6 +72,17 @@ const AddressModal = ({
           </div>
           
           <div className="sheet-actions">
+            <button 
+              type="button" 
+              className="btn-secondary u-focus-ring" 
+              onClick={onDemo}
+              title="See how it works with sample data"
+              style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-cyan)' }}
+            >
+              <Beaker size={16} />
+              <span>Try Demo Data</span>
+            </button>
+
             <button 
               type="button" 
               className="btn-secondary u-focus-ring" 

@@ -324,6 +324,7 @@ body::before {
   color: var(--text-primary);
   background: linear-gradient(135deg, #fff, #b0c4de);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

@@ -195,6 +195,28 @@ function App() {
     }
   }
 
+  const handleDemoBooth = () => {
+    const sampleBooth = {
+      name: "Dispur Govt. Higher Secondary School (Room 1)",
+      address: "Dispur, Guwahati, Assam 781006"
+    }
+    
+    setVoterData(prev => ({
+      ...prev,
+      savedBooth: sampleBooth,
+      steps: prev.steps.map(s => s.id === 2 ? { ...s, completed: true } : s)
+    }))
+
+    setMessages(prev => [...prev, { 
+      id: crypto.randomUUID(),
+      role: 'assistant', 
+      content: `### 🎯 Demo Mode Activated\n\nI've populated your dashboard with a **Sample Polling Booth** in Dispur. You can now see how the **Voter Journey** and **Command Center** react to saved data!\n\n**Booth:** ${sampleBooth.name}\n**Address:** ${sampleBooth.address}`,
+      type: 'civic'
+    }])
+    
+    setIsModalOpen(false)
+  }
+
   const clearHistory = () => {
     if (window.confirm("Are you sure you want to clear your chat history?")) {
       setMessages([])
@@ -257,6 +279,7 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddressLookup}
+        onDemo={handleDemoBooth}
         addressInput={addressInput}
         setAddressInput={setAddressInput}
         isSearching={isSearchingAddress}
