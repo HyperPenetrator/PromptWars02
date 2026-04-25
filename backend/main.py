@@ -24,6 +24,8 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+from fastapi.middleware.gzip import GZipMiddleware
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Gzip compression for static files and responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Global Exception Handler for Service Layer Errors
 @app.exception_handler(ServiceError)

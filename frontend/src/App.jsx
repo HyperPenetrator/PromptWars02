@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { Send, AlertCircle, CheckCircle2, MapPin } from 'lucide-react'
 import ChatMessage from './components/ChatMessage'
 import AddressModal from './components/AddressModal'
+import Header from './components/Header'
+import ChatInput from './components/ChatInput'
+import WelcomeCard from './components/WelcomeCard'
 import './App.css'
 
 function App() {
@@ -162,42 +165,11 @@ function App() {
 
   return (
     <div className="app-container" role="application" aria-label="Assam Election Process Assistant">
-      <header className="glass-header" role="banner">
-        <div className="header-content">
-          <div className="logo-section">
-            <CheckCircle2 className="logo-icon" size={28} aria-hidden="true" />
-            <h1 className="gradient-title">Election Process Assistant</h1>
-          </div>
-          <div className="header-actions">
-            <button 
-              id="poll-finder-trigger"
-              className="btn-civic u-focus-ring" 
-              onClick={() => setIsModalOpen(true)}
-              aria-label="Find your polling station on the map"
-            >
-              <MapPin size={20} />
-              <span>Poll Finder</span>
-            </button>
-            <button 
-              id="clear-history-btn"
-              className="btn-icon-only u-flex-center u-focus-ring" 
-              onClick={clearHistory} 
-              aria-label="Clear chat history and reset education session"
-              title="Clear History"
-            >
-              <AlertCircle size={20} />
-            </button>
-            <div 
-              className={`status-pill ${health.toLowerCase()}`} 
-              aria-live="polite"
-              aria-label={`System Status: ${health}`}
-            >
-              <span className="u-sr-only">Status:</span>
-              {health}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        health={health} 
+        setIsModalOpen={setIsModalOpen} 
+        clearHistory={clearHistory} 
+      />
 
       <main className="chat-interface" role="main">
         <div 
@@ -208,17 +180,10 @@ function App() {
           aria-label="Conversation history with the Election Assistant"
         >
           {messages.length === 0 ? (
-            <div className="welcome-overlay">
-              <section className="welcome-card u-glass" aria-labelledby="welcome-heading">
-                <h2 id="welcome-heading">Civic Education Portal</h2>
-                <p>Welcome to the official education assistant for the Assam Election process. Ask about voter registration, EPIC cards, or the ECI process.</p>
-                <div className="suggestions" role="group" aria-label="Suggested education topics">
-                  <button className="suggestion-pill u-focus-ring" onClick={() => { setInput("How to register as a new voter in Assam?"); handleSend(); }}>Voter Registration</button>
-                  <button className="suggestion-pill u-focus-ring" onClick={() => { setInput("What is an EPIC card and how to get it?"); handleSend(); }}>EPIC Card Info</button>
-                  <button className="suggestion-pill u-focus-ring" onClick={() => { setInput("Check my name in electoral roll Assam"); handleSend(); }}>Check Roll</button>
-                </div>
-              </section>
-            </div>
+            <WelcomeCard 
+              setInput={setInput} 
+              handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} 
+            />
           ) : (
             messages.map((msg, idx) => (
               <ChatMessage key={msg.id || idx} msg={msg} />
@@ -232,34 +197,12 @@ function App() {
           <div ref={messagesEndRef} tabIndex="-1" />
         </div>
 
-        <section className="input-section">
-          <form 
-            className="input-container u-glass" 
-            onSubmit={handleSend}
-            role="search"
-            aria-label="Query assistant"
-          >
-            <input
-              id="query-input"
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about NVSP, EPIC, or Assam voting..."
-              aria-label="Type your question about elections here"
-              disabled={isLoading}
-              autoComplete="off"
-            />
-            <button 
-              id="send-query-btn"
-              type="submit" 
-              className="send-btn u-flex-center u-focus-ring"
-              disabled={isLoading || !input.trim()} 
-              aria-label="Submit your question"
-            >
-              <Send size={24} />
-            </button>
-          </form>
-        </section>
+        <ChatInput 
+          input={input} 
+          setInput={setInput} 
+          handleSend={handleSend} 
+          isLoading={isLoading} 
+        />
       </main>
 
       <AddressModal 

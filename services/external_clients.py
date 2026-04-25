@@ -18,6 +18,9 @@ class CivicClient:
         self.api_key = api_key or AppConfig.get_secret("CIVIC_INFO_API_KEY")
         self.base_url = "https://www.googleapis.com/civicinfo/v2/voterinfo"
 
+    from functools import lru_cache
+
+    @lru_cache(maxsize=128)
     def get_voter_info(self, address: str) -> Dict[str, Any]:
         if not self.api_key:
             logger.warning("Civic API key not configured. Returning empty state.")
@@ -60,7 +63,10 @@ class WikiClient:
     """
     Wikipedia API client for educational summaries.
     """
+    from functools import lru_cache
+
     @staticmethod
+    @lru_cache(maxsize=128)
     def get_summary(query: str) -> str:
         formatted_query = query.replace(' ', '_')
         url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_query}"
