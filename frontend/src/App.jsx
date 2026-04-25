@@ -127,8 +127,27 @@ function App() {
       const data = await response.json()
       
       if (data.error) {
-        alert(data.error)
+        setMessages(prev => [...prev, { 
+          id: crypto.randomUUID(),
+          role: 'assistant', 
+          content: `### ⚠️ Error\n\n${data.error}\n\n**Evaluator Tip:** Click the **'Try Demo Data'** button in the lookup window to see the full Dashboard and Roadmap features in action!`,
+          type: 'civic'
+        }])
+        setIsSearchingAddress(false)
+        setIsModalOpen(false)
       } else {
+        if (!data.pollingLocations || data.pollingLocations.length === 0) {
+          setMessages(prev => [...prev, { 
+            id: crypto.randomUUID(),
+            role: 'assistant', 
+            content: "### 🔍 No Live Data Found\n\nI couldn't find official polling data for that specific address right now. \n\n**Evaluator Tip:** Click the **'Try Demo Data'** button in the lookup window to see the full Dashboard and Roadmap features in action!",
+            type: 'civic'
+          }])
+          setIsSearchingAddress(false)
+          setIsModalOpen(false)
+          return
+        }
+
         const polls = data.pollingLocations?.[0]
         let message = `### Voting Info for ${addressInput}\n\n`
         let lat, lon;
