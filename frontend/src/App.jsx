@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, AlertCircle, CheckCircle2, MapPin } from 'lucide-react'
-import { auth } from './firebase'
+import { auth, trackEvent, saveUserData, loadUserData, saveChatHistory, loadChatHistory } from './firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import ChatMessage from './components/ChatMessage'
 import AddressModal from './components/AddressModal'
@@ -14,8 +14,20 @@ function App() {
   const [user, setUser] = useState(null)
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser)
+      if (currentUser) {
+        trackEvent('user_session_start', { uid: currentUser.uid })
+        // Load user data from Firestore (cloud persistence)
+        const cloudVoterData = await loadUserData(currentUser.uid)
+        if (cloudVoterData) {
+          setVoterData(cloudVoterData)
+        }
+        const cloudChat = await loadChatHistory(currentUser.uid)
+        if (cloudChat && cloudChat.length > 0) {
+          setMessages(cloudChat)
+        }
+      }
     })
     return () => unsubscribe()
   }, [])
@@ -47,7 +59,11 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('voter_data_global', JSON.stringify(voterData))
-  }, [voterData])
+    // Sync voter data to Firestore when user is logged in
+    if (user?.uid) {
+      saveUserData(user.uid, voterData)
+    }
+  }, [voterData, user])
   
   const messagesEndRef = useRef(null)
 
@@ -61,7 +77,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('election_chat_history', JSON.stringify(messages))
     scrollToBottom()
-  }, [messages])
+    // Sync chat history to Firestore
+    if (user?.uid && messages.length > 0) {
+      saveChatHistory(user.uid, messages)
+    }
+  }, [messages, user])
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -86,6 +106,7 @@ function App() {
 
     const userMessage = { id: crypto.randomUUID(), role: 'user', content: text }
     setMessages(prev => [...prev, userMessage])
+    trackEvent('chat_message_sent', { length: text.length })
     setInput('')
     setIsLoading(true)
 
@@ -116,7 +137,7 @@ function App() {
 
   const handleAddressLookup = async () => {
     if (!addressInput.trim() || isSearchingAddress) return
-
+    trackEvent('booth_lookup', { address: addressInput })
     setIsSearchingAddress(true)
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/civic-info`, {
@@ -219,6 +240,7 @@ function App() {
       name: "Dispur Govt. Higher Secondary School (Room 1)",
       address: "Dispur, Guwahati, Assam 781006"
     }
+    trackEvent('demo_mode_activated')
     
     setVoterData(prev => ({
       ...prev,
@@ -240,6 +262,7 @@ function App() {
     if (window.confirm("Are you sure you want to clear your chat history?")) {
       setMessages([])
       localStorage.removeItem('election_chat_history')
+      trackEvent('chat_history_cleared')
     }
   }
 
