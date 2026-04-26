@@ -28,10 +28,12 @@ const db = getFirestore(app);
 
 // ── Firebase Analytics (Event Tracking) ──────────────────────────
 let analytics = null;
-try {
-  analytics = getAnalytics(app);
-} catch (e) {
-  console.warn("Firebase Analytics not available in this environment.");
+if (firebaseConfig.measurementId && !firebaseConfig.measurementId.includes('PLACEHOLDER')) {
+  try {
+    analytics = getAnalytics(app);
+  } catch (e) {
+    console.warn("Firebase Analytics not available in this environment.");
+  }
 }
 
 // ── Firebase Performance Monitoring ──────────────────────────────
