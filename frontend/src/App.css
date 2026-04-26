@@ -247,6 +247,26 @@ body::before {
   background: rgba(59, 130, 246, 0.1);
 }
 
+.btn-dashboard {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-dashboard:hover {
+  background: rgba(0, 242, 254, 0.1);
+  color: var(--text-primary);
+}
+
 /* Status Pill */
 .status-pill {
   padding: 0.4rem 0.8rem;
@@ -642,18 +662,27 @@ body::before {
     font-size: 0.8rem;
   }
 
-  .user-name {
+  .user-name,
+  .btn-label,
+  .status-text {
     display: none;
   }
 
   .status-pill {
-    font-size: 0;
     padding: 0.4rem;
-    min-width: 24px;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
     justify-content: center;
   }
+
   .status-pill::before {
     margin: 0;
+  }
+
+  .btn-dashboard {
+    padding: 0.5rem;
   }
 
   .chat-interface {
@@ -767,19 +796,16 @@ body::before {
 
 /* ── Mobile (≤ 640px) ─────────────────────────────── */
 @media (max-width: 640px) {
-  .header-actions .btn-civic span {
+  .header-actions .btn-civic span,
+  .header-actions .btn-dashboard .btn-label {
     display: none;
   }
-  .header-actions .btn-civic {
+  
+  .header-actions .btn-civic,
+  .header-actions .btn-dashboard {
     padding: 0.6rem;
     border-radius: 12px;
-  }
-
-  /* Dashboard button: icon-only on mobile */
-  .header-actions .btn-secondary span,
-  .header-actions .btn-secondary {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.6rem;
+    justify-content: center;
   }
 
   .btn-icon-only {
@@ -915,6 +941,23 @@ body::before {
   .fab-btn {
     width: 40px;
     height: 40px;
+  }
+
+  .input-section {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .input-container {
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  }
+
+  .input-container input {
+    font-size: 0.95rem;
+  }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
   }
 
   .welcome-card h2 {

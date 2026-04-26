@@ -1,38 +1,44 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, AlertCircle, CheckCircle2, MapPin } from 'lucide-react'
-import { auth, trackEvent, saveUserData, loadUserData, saveChatHistory, loadChatHistory } from './firebase'
+import { useState, useEffect, useRef } from 'react'
+import { AlertCircle } from 'lucide-react'
+import { auth, trackEvent, loadUserData, saveChatHistory, loadChatHistory } from './firebase'
 import { onAuthStateChanged } from 'firebase/auth'
+
+// Components
 import ChatMessage from './components/ChatMessage'
 import AddressModal from './components/AddressModal'
 import Header from './components/Header'
 import ChatInput from './components/ChatInput'
 import WelcomeCard from './components/WelcomeCard'
 import Dashboard from './components/Dashboard'
+
+// Hooks & Services
+import { useVoterData } from './hooks/useVoterData'
+import { checkApiHealth, sendChatMessage, lookupCivicInfo, geocodeAddress } from './services/api'
+
 import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
+  const { voterData, setVoterData, updateBooth } = useVoterData(user)
   
+  // ── User Session & Cloud Sync ──────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser)
       if (currentUser) {
         trackEvent('user_session_start', { uid: currentUser.uid })
-        // Load user data from Firestore (cloud persistence)
+        
         const cloudVoterData = await loadUserData(currentUser.uid)
-        if (cloudVoterData) {
-          setVoterData(cloudVoterData)
-        }
+        if (cloudVoterData) setVoterData(cloudVoterData)
+        
         const cloudChat = await loadChatHistory(currentUser.uid)
-        if (cloudChat && cloudChat.length > 0) {
-          setMessages(cloudChat)
-        }
+        if (cloudChat?.length > 0) setMessages(cloudChat)
       }
     })
     return () => unsubscribe()
-  }, [])
+  }, [setVoterData])
 
-  // State initialization with LocalStorage persistence
+  // ── State Management ───────────────────────────────────────────
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('election_chat_history')
     return saved ? JSON.parse(saved) : []
@@ -44,61 +50,26 @@ function App() {
   const [addressInput, setAddressInput] = useState('')
   const [isSearchingAddress, setIsSearchingAddress] = useState(false)
   
-  const [voterData, setVoterData] = useState(() => {
-    const saved = localStorage.getItem('voter_data_global')
-    return saved ? JSON.parse(saved) : {
-      steps: [
-        { id: 1, title: 'Register to Vote', completed: true, description: 'Ensure your name is in the electoral roll.' },
-        { id: 2, title: 'Find Polling Booth', completed: false, description: 'Locate your assigned voting station.' },
-        { id: 3, title: 'Verify Identity', completed: false, description: 'Check if you have a valid EPIC card.' },
-        { id: 4, title: 'Cast Your Vote', completed: false, description: 'Visit your booth on election day.' }
-      ],
-      savedBooth: null
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem('voter_data_global', JSON.stringify(voterData))
-    // Sync voter data to Firestore when user is logged in
-    if (user?.uid) {
-      saveUserData(user.uid, voterData)
-    }
-  }, [voterData, user])
-  
   const messagesEndRef = useRef(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8001' : '');
-
-  // Side Effects
+  // ── Side Effects ───────────────────────────────────────────────
   useEffect(() => {
     localStorage.setItem('election_chat_history', JSON.stringify(messages))
-    scrollToBottom()
-    // Sync chat history to Firestore
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    
     if (user?.uid && messages.length > 0) {
       saveChatHistory(user.uid, messages)
     }
   }, [messages, user])
 
   useEffect(() => {
-    const checkHealth = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/health`)
-        if (res.ok) setHealth('Online')
-        else setHealth('Error')
-      } catch {
-        setHealth('Offline')
-      }
-    }
-    checkHealth()
-    const interval = setInterval(checkHealth, 30000) // Check every 30s
+    const updateHealth = async () => setHealth(await checkApiHealth())
+    updateHealth()
+    const interval = setInterval(updateHealth, 30000)
     return () => clearInterval(interval)
-  }, [API_BASE_URL])
+  }, [])
 
-  // API Handlers
+  // ── Chat Logic ────────────────────────────────────────────────
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     const text = input.trim()
@@ -116,118 +87,56 @@ function App() {
         parts: [m.content]
       }))
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text, history })
-      })
-
-      const data = await response.json()
+      const data = await sendChatMessage(text, history)
       setMessages(prev => [...prev, { id: crypto.randomUUID(), role: 'assistant', content: data.response }])
     } catch {
       setMessages(prev => [...prev, { 
         id: crypto.randomUUID(),
         role: 'assistant', 
-        content: "I'm sorry, I encountered an error connecting to the voting service. Please check your connection and try again." 
+        content: "I encountered an error connecting to the voting service. Please try again." 
       }])
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ── Civic Lookup Logic ────────────────────────────────────────
   const handleAddressLookup = async () => {
     if (!addressInput.trim() || isSearchingAddress) return
     trackEvent('booth_lookup', { address: addressInput })
     setIsSearchingAddress(true)
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/civic-info`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: addressInput })
-      })
-      const data = await response.json()
+      const data = await lookupCivicInfo(addressInput)
       
-      if (data.error) {
+      if (data.error || !data.pollingLocations?.length) {
         setMessages(prev => [...prev, { 
           id: crypto.randomUUID(),
           role: 'assistant', 
-          content: `### ⚠️ Error\n\n${data.error}\n\n**Evaluator Tip:** Click the **'Try Demo Data'** button in the lookup window to see the full Dashboard and Roadmap features in action!`,
+          content: `### 🔍 Lookup Info\n\n${data.error || "I couldn't find live data for that address."}\n\n**Tip:** Use **'Try Demo Data'** to see the full dashboard features!`,
           type: 'civic'
         }])
-        setIsSearchingAddress(false)
         setIsModalOpen(false)
-      } else {
-        if (!data.pollingLocations || data.pollingLocations.length === 0) {
-          setMessages(prev => [...prev, { 
-            id: crypto.randomUUID(),
-            role: 'assistant', 
-            content: "### 🔍 No Live Data Found\n\nI couldn't find official polling data for that specific address right now. \n\n**Evaluator Tip:** Click the **'Try Demo Data'** button in the lookup window to see the full Dashboard and Roadmap features in action!",
-            type: 'civic'
-          }])
-          setIsSearchingAddress(false)
-          setIsModalOpen(false)
-          return
-        }
-
-        const polls = data.pollingLocations?.[0]
-        let message = `### Voting Info for ${addressInput}\n\n`
-        let lat, lon;
-
-        // Try to geocode the input address first to have a map center
-        try {
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput)}&limit=1`)
-          const geoData = await geoRes.json()
-          if (geoData.length > 0) {
-            lat = parseFloat(geoData[0].lat)
-            lon = parseFloat(geoData[0].lon)
-          }
-        } catch (e) {
-          console.error("Input geocoding failed", e)
-        }
-
-        if (polls) {
-          const fullAddr = `${polls.address.line1}, ${polls.address.city}, ${polls.address.state}`
-          message += `**Polling Location:** ${polls.address.locationName}\n`
-          message += `**Address:** ${fullAddr} ${polls.address.zip}\n`
-          message += `**Hours:** ${polls.pollingHours || 'Not listed'}\n`
-          
-          // Auto-update Dashboard
-          setVoterData(prev => ({
-            ...prev,
-            savedBooth: {
-              name: polls.address.locationName,
-              address: fullAddr
-            },
-            steps: prev.steps.map(s => s.id === 2 ? { ...s, completed: true } : s)
-          }))
-
-          // If we have specific poll address, try to geocode that instead (more precise)
-          try {
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddr)}&limit=1`)
-            const geoData = await geoRes.json()
-            if (geoData.length > 0) {
-              lat = parseFloat(geoData[0].lat)
-              lon = parseFloat(geoData[0].lon)
-            }
-          } catch (e) {
-            console.error("Poll geocoding failed", e)
-          }
-        } else {
-          message += "No specific polling locations found for this address. For official data, please check [CEO Assam](https://ceoassam.nic.in).\n\n"
-          message += "*Note: The Civic API may not have live data for this specific locality right now.*"
-        }
-        
-        setMessages(prev => [...prev, { 
-          id: crypto.randomUUID(),
-          role: 'assistant', 
-          content: message,
-          type: 'civic',
-          coords: lat && lon ? [lat, lon] : null,
-          locationName: polls?.address?.locationName || addressInput
-        }])
-        setIsModalOpen(false)
-        setAddressInput('')
+        return
       }
+
+      const polls = data.pollingLocations[0]
+      const fullAddr = `${polls.address.line1}, ${polls.address.city}, ${polls.address.state}`
+      
+      updateBooth(polls.address.locationName, fullAddr)
+
+      const coords = await geocodeAddress(fullAddr) || await geocodeAddress(addressInput)
+      
+      setMessages(prev => [...prev, { 
+        id: crypto.randomUUID(),
+        role: 'assistant', 
+        content: `### Voting Info for ${addressInput}\n\n**Location:** ${polls.address.locationName}\n**Address:** ${fullAddr} ${polls.address.zip}`,
+        type: 'civic',
+        coords: coords ? [coords.lat, coords.lon] : null,
+        locationName: polls.address.locationName
+      }])
+      setIsModalOpen(false)
+      setAddressInput('')
     } catch {
       alert("Failed to fetch civic information. Please try again later.")
     } finally {
@@ -236,30 +145,20 @@ function App() {
   }
 
   const handleDemoBooth = () => {
-    const sampleBooth = {
-      name: "Dispur Govt. Higher Secondary School (Room 1)",
-      address: "Dispur, Guwahati, Assam 781006"
-    }
+    const sample = { name: "Dispur Govt. School", addr: "Dispur, Guwahati, Assam 781006" }
     trackEvent('demo_mode_activated')
-    
-    setVoterData(prev => ({
-      ...prev,
-      savedBooth: sampleBooth,
-      steps: prev.steps.map(s => s.id === 2 ? { ...s, completed: true } : s)
-    }))
-
+    updateBooth(sample.name, sample.addr)
     setMessages(prev => [...prev, { 
       id: crypto.randomUUID(),
       role: 'assistant', 
-      content: `### 🎯 Demo Mode Activated\n\nI've populated your dashboard with a **Sample Polling Booth** in Dispur. You can now see how the **Voter Journey** and **Command Center** react to saved data!\n\n**Booth:** ${sampleBooth.name}\n**Address:** ${sampleBooth.address}`,
+      content: `### 🎯 Demo Activated\n\nI've populated your dashboard with a **Sample Polling Booth** in Dispur.`,
       type: 'civic'
     }])
-    
     setIsModalOpen(false)
   }
 
   const clearHistory = () => {
-    if (window.confirm("Are you sure you want to clear your chat history?")) {
+    if (window.confirm("Clear your chat history?")) {
       setMessages([])
       localStorage.removeItem('election_chat_history')
       trackEvent('chat_history_cleared')
@@ -267,79 +166,38 @@ function App() {
   }
 
   return (
-    <div className="app-container" role="application" aria-label="Assam Election Process Assistant">
-      <Header 
-        health={health} 
-        setIsModalOpen={setIsModalOpen} 
-        clearHistory={clearHistory} 
-      />
+    <div className="app-container" role="application" aria-label="Assam Election Assistant">
+      <Header health={health} setIsModalOpen={setIsModalOpen} clearHistory={clearHistory} />
 
       <main className="chat-interface" role="main">
-        <div 
-          className="messages-container u-hide-scrollbar" 
-          role="log" 
-          aria-live="polite" 
-          aria-relevant="additions"
-          aria-label="Conversation history with the Election Assistant"
-        >
+        <div className="messages-container u-hide-scrollbar" role="log" aria-live="polite">
           {messages.length === 0 ? (
-            !user && (
-              <WelcomeCard 
-                setInput={setInput} 
-                handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} 
-              />
-            )
+            !user && <WelcomeCard setInput={setInput} handleSend={() => setTimeout(() => document.getElementById('send-query-btn')?.click(), 50)} />
           ) : (
-            messages.map((msg, idx) => (
-              <ChatMessage key={msg.id || idx} msg={msg} />
-            ))
+            messages.map((msg, idx) => <ChatMessage key={msg.id || idx} msg={msg} />)
           )}
           
           {user && (
             <div id="dashboard-section" className="persistent-dashboard">
-              <Dashboard 
-                user={user} 
-                voterData={voterData}
-                setInput={setInput} 
-                handleSend={handleSend} 
-              />
+              <Dashboard user={user} voterData={voterData} setInput={setInput} handleSend={handleSend} />
             </div>
           )}
-          {isLoading && (
-            <div aria-busy="true" aria-label="Assistant is typing">
-              <ChatMessage msg={{ role: 'assistant', content: '' }} isLoading={true} />
-            </div>
-          )}
-          <div ref={messagesEndRef} tabIndex="-1" />
+          {isLoading && <ChatMessage msg={{ role: 'assistant', content: '' }} isLoading={true} />}
+          <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput 
-          input={input} 
-          setInput={setInput} 
-          handleSend={handleSend} 
-          isLoading={isLoading} 
-        />
+        <ChatInput input={input} setInput={setInput} handleSend={handleSend} isLoading={isLoading} />
       </main>
 
       <AddressModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddressLookup}
-        onDemo={handleDemoBooth}
-        addressInput={addressInput}
-        setAddressInput={setAddressInput}
+        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} 
+        onSubmit={handleAddressLookup} onDemo={handleDemoBooth}
+        addressInput={addressInput} setAddressInput={setAddressInput}
         isSearching={isSearchingAddress}
       />
 
       <aside className="fab-links">
-        <a 
-          href="https://ceoassam.nic.in" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="fab-btn u-flex-center u-focus-ring"
-          aria-label="Open Official CEO Assam Portal in a new tab"
-          title="Official CEO Assam Portal"
-        >
+        <a href="https://ceoassam.nic.in" target="_blank" rel="noopener noreferrer" className="fab-btn u-flex-center" title="CEO Assam Portal">
           <AlertCircle size={28} />
         </a>
       </aside>

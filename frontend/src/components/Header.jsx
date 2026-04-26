@@ -1,4 +1,4 @@
-import { CheckCircle2, MapPin, AlertCircle, LogIn, LogOut } from 'lucide-react'
+import { CheckCircle2, MapPin, AlertCircle, LogIn, LogOut, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { auth, loginWithGoogle, logout } from '../firebase'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -39,11 +39,13 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
 
           {user && (
             <button 
-              className="btn-secondary u-focus-ring"
+              className="btn-dashboard u-focus-ring"
               onClick={() => document.getElementById('dashboard-section')?.scrollIntoView({ behavior: 'smooth' })}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', border: 'none', background: 'rgba(255,255,255,0.05)', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '8px' }}
+              aria-label="Go to Dashboard"
+              title="Dashboard"
             >
-              Dashboard
+              <LayoutDashboard size={18} />
+              <span className="btn-label">Dashboard</span>
             </button>
           )}
 
@@ -73,7 +75,7 @@ export default function Header({ health, setIsModalOpen, clearHistory }) {
             aria-label={`System Status: ${health}`}
           >
             <span className="u-sr-only">Status:</span>
-            {health}
+            <span className="status-text">{health}</span>
           </div>
         </div>
       </div>

@@ -77,6 +77,13 @@ if os.path.isdir(frontend_dist):
     
     @app.get("/{catchall:path}")
     async def serve_frontend(catchall: str):
+        # Ensure API calls still 404 correctly
+        if catchall.startswith("api"):
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Not Found"}
+            )
+            
         # Serve icons.svg or other files from root of dist if they exist
         file_path = os.path.join(frontend_dist, catchall)
         if os.path.isfile(file_path):
