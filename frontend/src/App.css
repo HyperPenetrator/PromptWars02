@@ -618,23 +618,413 @@ body::before {
   border-color: var(--text-muted);
 }
 
-/* Mobile Responsive */
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE DESIGN SYSTEM
+   Breakpoints: 768px (tablet), 640px (mobile), 400px (small)
+   ═══════════════════════════════════════════════════ */
+
+/* ── Tablet (≤ 768px) ─────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 60px;
+  }
+
+  .gradient-title {
+    font-size: 1.1rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .header-actions .btn-civic {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .status-pill {
+    font-size: 0;
+    padding: 0.4rem;
+    min-width: 24px;
+    justify-content: center;
+  }
+  .status-pill::before {
+    margin: 0;
+  }
+
+  .chat-interface {
+    max-width: 100%;
+  }
+
+  .messages-container {
+    padding: 1.25rem 1rem;
+    gap: 1.5rem;
+  }
+
+  .message-wrapper {
+    max-width: 92%;
+    gap: 0.75rem;
+  }
+
+  .message-bubble {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .welcome-card {
+    max-width: 95vw;
+  }
+
+  .welcome-card p {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .suggestions {
+    gap: 0.5rem;
+  }
+
+  .suggestion-pill {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .input-container {
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  }
+
+  .input-container input {
+    font-size: 1rem;
+  }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .map-container-wrapper {
+    height: 220px;
+  }
+
+  .modal-sheet {
+    max-width: 100%;
+    padding: 2rem 1.5rem;
+  }
+
+  .sheet-title {
+    font-size: 1.75rem;
+  }
+
+  .input-group input {
+    font-size: 1rem;
+    padding: 1rem 1.25rem;
+  }
+
+  .fab-links {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .fab-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-container {
+    gap: 1rem;
+  }
+
+  .glass-card {
+    padding: 1.25rem;
+  }
+
+  .avatar-large {
+    width: 48px;
+    height: 48px;
+  }
+
+  .persistent-dashboard {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* ── Mobile (≤ 640px) ─────────────────────────────── */
 @media (max-width: 640px) {
-  .header-actions .btn-civic span { display: none; }
-  .header-actions .btn-civic { padding: 0.6rem; }
-  
-  .message-wrapper { max-width: 95%; }
-  .message-bubble { padding: 1rem 1.25rem; font-size: 0.95rem; }
-  
-  .input-container { padding-left: 1.25rem; }
-  
-  .modal-backdrop { align-items: flex-end; padding: 0; }
-  .modal-sheet { 
-    border-radius: 32px 32px 0 0; 
-    padding: 2.5rem 1.5rem; 
-    background: rgba(10, 17, 40, 0.85); 
-    backdrop-filter: blur(24px); 
-    -webkit-backdrop-filter: blur(24px); 
+  .header-actions .btn-civic span {
+    display: none;
+  }
+  .header-actions .btn-civic {
+    padding: 0.6rem;
+    border-radius: 12px;
+  }
+
+  /* Dashboard button: icon-only on mobile */
+  .header-actions .btn-secondary span,
+  .header-actions .btn-secondary {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .btn-icon-only {
+    width: 38px;
+    height: 38px;
+  }
+
+  .gradient-title {
+    font-size: 0.95rem;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-section {
+    gap: 0.5rem;
+  }
+
+  .logo-section .logo-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .message-wrapper {
+    max-width: 95%;
+    gap: 0.5rem;
+  }
+
+  .message-bubble {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    border-radius: 14px;
+  }
+
+  .message-bubble h3 {
+    font-size: 1rem;
+  }
+
+  .message-bubble p {
+    margin-bottom: 0.5rem;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .input-section {
+    padding: 0.75rem;
+  }
+
+  .input-container {
+    padding: 0.4rem 0.4rem 0.4rem 1rem;
+    border-radius: 20px;
+  }
+
+  .input-container input {
+    font-size: 0.95rem;
+  }
+
+  .send-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Modal becomes bottom sheet on mobile */
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-sheet {
+    border-radius: 28px 28px 0 0;
+    padding: 2rem 1.25rem 2.5rem;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(10, 17, 40, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .sheet-title {
+    font-size: 1.5rem;
+  }
+
+  .sheet-description {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .sheet-actions {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .sheet-actions button {
+    flex: 1;
+    min-width: 100px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .step-item {
+    gap: 0.75rem;
+    padding: 0.6rem;
+  }
+
+  .step-content h4 {
+    font-size: 0.88rem;
+  }
+
+  .step-content p {
+    font-size: 0.8rem;
+  }
+
+  .section-title {
+    font-size: 1rem;
+  }
+
+  .chip {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .action-chips {
+    gap: 0.5rem;
+  }
+
+  .fab-links {
+    bottom: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .fab-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .welcome-card h2 {
+    font-size: 1.25rem;
+  }
+
+  .welcome-card p {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .suggestion-pill {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  .user-welcome h2 {
+    font-size: 1.1rem;
+  }
+
+  .user-welcome p {
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Small Mobile (≤ 400px) ───────────────────────── */
+@media (max-width: 400px) {
+  .glass-header {
+    padding: 0 0.75rem;
+  }
+
+  .gradient-title {
+    font-size: 0.85rem;
+  }
+
+  .messages-container {
+    padding: 1rem 0.75rem;
+    gap: 1rem;
+  }
+
+  .message-bubble {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .modal-sheet {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .sheet-title {
+    font-size: 1.25rem;
+  }
+
+  .input-group input {
+    font-size: 0.9rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .glass-card {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .close-modal {
+    top: 1rem !important;
+    right: 1rem !important;
+  }
+}
+
+/* ── Landscape Mobile Safety ──────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --header-height: 48px;
+  }
+
+  .messages-container {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+
+  .input-section {
+    padding: 0.5rem;
+  }
+
+  .modal-sheet {
+    max-height: 90vh;
+  }
+}
+
+/* ── Touch Device Enhancements ────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  .btn-civic:hover,
+  .btn-icon-only:hover,
+  .suggestion-pill:hover,
+  .chip:hover,
+  .fab-btn:hover {
+    transform: none;
+  }
+
+  .input-container:focus-within {
+    transform: none;
+  }
+
+  /* Ensure minimum touch targets (48px) */
+  .btn-civic,
+  .btn-secondary,
+  .btn-icon-only,
+  .chip,
+  .suggestion-pill {
+    min-height: 44px;
   }
 }
 
@@ -804,11 +1194,8 @@ body::before {
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (max-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
+
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
