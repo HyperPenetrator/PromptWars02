@@ -7,6 +7,5 @@ export const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "promptwars-02-54bf8",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "promptwars-02-54bf8.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "76853460573",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:76853460573:web:8a783652bbef61edf817b4",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-PLACEHOLDER"
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:76853460573:web:8a783652bbef61edf817b4"
 };
