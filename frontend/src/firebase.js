@@ -6,6 +6,7 @@
  * - Firestore (Cloud data persistence)
  * - Analytics (User event tracking)
  * - Performance Monitoring (Web vitals)
+ * - Storage (File uploads)
  * 
  * @module firebase
  */
@@ -14,6 +15,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { getAnalytics, logEvent } from "firebase/analytics";
 import { getPerformance } from "firebase/performance";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { firebaseConfig } from "./config/firebase-config";
 
 // ── Initialize Firebase App ──────────────────────────────────────
@@ -25,6 +27,9 @@ const provider = new GoogleAuthProvider();
 
 // ── Cloud Firestore (Data Persistence) ───────────────────────────
 const db = getFirestore(app);
+
+// ── Firebase Storage (File Management) ───────────────────────────
+const storage = getStorage(app);
 
 // ── Firebase Analytics (Event Tracking) ──────────────────────────
 let analytics = null;
@@ -45,7 +50,7 @@ try {
 }
 
 // ── Auth Functions ───────────────────────────────────────────────
-export { auth, provider, db, analytics };
+export { auth, provider, db, analytics, storage };
 
 /**
  * Sign in the user with a Google popup.
@@ -154,3 +159,36 @@ export const loadChatHistory = async (uid) => {
     return null;
   }
 };
+
+/**
+ * Get a download URL for the public voter guide from Firebase Storage.
+ * @returns {Promise<string|null>} The download URL or null if failed.
+ */
+export const getVoterGuideUrl = async () => {
+  try {
+    const guideRef = ref(storage, 'public/voter_guide_2026.pdf');
+    return await getDownloadURL(guideRef);
+  } catch (e) {
+    console.warn("Storage asset not found, providing fallback demo link.");
+    return "https://ceoassam.nic.in/pdf/voter_guide.pdf"; // Fallback to actual Assam CEO PDF
+  }
+};
+
+/**
+ * Upload a profile picture to Firebase Storage.
+ * @param {string} uid - The user's UID.
+ * @param {File} file - The image file to upload.
+ * @returns {Promise<string>} The download URL of the uploaded image.
+ */
+export const uploadProfilePicture = async (uid, file) => {
+  const storageRef = ref(storage, `users/${uid}/profile.jpg`);
+  await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(storageRef);
+  
+  // Track the event
+  trackEvent('profile_picture_upload');
+  
+  return downloadURL;
+};
+
+

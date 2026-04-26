@@ -74,13 +74,37 @@ body::before {
   box-shadow: var(--shadow-lg);
 }
 
-.u-flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.u-flex-center { display: flex; align-items: center; justify-content: center; }
+.u-text-muted { color: var(--text-muted); }
+.u-text-accent { color: var(--accent); }
+.u-relative { position: relative; }
+.u-hidden { display: none; }
+.u-spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-.u-hide-scrollbar::-webkit-scrollbar { display: none; }
+/* Avatar Edit Button */
+.avatar-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  color: white;
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+.avatar-edit-btn:hover {
+  transform: scale(1.1);
+  background: var(--primary);
+}
+.avatar-edit-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
 .u-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 .u-focus-ring:focus-visible {
@@ -1090,6 +1114,59 @@ body::before {
 }
 
 /* Dashboard & Enterprise UI */
+.roadmap-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.roadmap-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.resource-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.download-btn {
+  background: var(--bg-card);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 0, 102, 204), 0.3);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .dashboard-container {
   display: flex;
   flex-direction: column;
